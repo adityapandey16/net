@@ -1,0 +1,209 @@
+Creating a Web API in ASP.NET using the Code First approach involves several steps, including setting up the project, defining the data models, configuring the database context, and creating the API controllers. Here's a step-by-step guide to help you through the process:
+Step 1: Create a New ASP.NET Web API Project
+
+    Open Visual Studio and create a new project.
+    Select "ASP.NET Core Web Application" and click "Next".
+    Name your project and select the location where you want to save it. Click "Create".
+    Select "API" and ensure that "Enable Docker Support" and "Configure for HTTPS" are unchecked unless needed. Click "Create".
+
+Step 2: Install Entity Framework Core
+
+    Open the NuGet Package Manager Console from the Tools menu.
+
+    Run the following commands to install Entity Framework Core and the necessary SQL Server provider:
+
+    powershell
+
+    Install-Package Microsoft.EntityFrameworkCore
+    Install-Package Microsoft.EntityFrameworkCore.SqlServer
+    Install-Package Microsoft.EntityFrameworkCore.Tools
+
+Step 3: Define Your Data Models
+
+    Create a new folder in your project called Models.
+
+    Add a new class to the Models folder for each of your entities. For example, create a Product class:
+
+    csharp
+
+    namespace YourNamespace.Models
+    {
+        public class Product
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public decimal Price { get; set; }
+            public int Stock { get; set; }
+        }
+    }
+
+Step 4: Create the Database Context
+
+    Create a new folder in your project called Data.
+
+    Add a new class to the Data folder called AppDbContext:
+
+    csharp
+
+    using Microsoft.EntityFrameworkCore;
+    using YourNamespace.Models;
+
+    namespace YourNamespace.Data
+    {
+        public class AppDbContext : DbContext
+        {
+            public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+            public DbSet<Product> Products { get; set; }
+        }
+    }
+
+Step 5: Configure the Database Connection String
+
+    Open the appsettings.json file.
+
+    Add your database connection string:
+
+    json
+
+    "ConnectionStrings": {
+        "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=YourDatabaseName;Trusted_Connection=True;MultipleActiveResultSets=true"
+    }
+
+Step 6: Configure the Dependency Injection
+
+    Open the Startup.cs file.
+
+    Add the using directive for your Data namespace at the top.
+
+    In the ConfigureServices method, add the following line to configure the DbContext:
+
+    csharp
+
+    services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+Step 7: Create the API Controllers
+
+    Create a new folder in your project called Controllers.
+
+    Add a new API controller to the Controllers folder for your entity. For example, create a ProductsController:
+
+    csharp
+
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.EntityFrameworkCore;
+    using YourNamespace.Data;
+    using YourNamespace.Models;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+
+    namespace YourNamespace.Controllers
+    {
+        [Route("api/[controller]")]
+        [ApiController]
+        public class ProductsController : ControllerBase
+        {
+            private readonly AppDbContext _context;
+
+            public ProductsController(AppDbContext context)
+            {
+                _context = context;
+            }
+
+            [HttpGet]
+            public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+            {
+                return await _context.Products.ToListAsync();
+            }
+
+            [HttpGet("{id}")]
+            public async Task<ActionResult<Product>> GetProduct(int id)
+            {
+                var product = await _context.Products.FindAsync(id);
+
+                if (product == null)
+                {
+                    return NotFound();
+                }
+
+                return product;
+            }
+
+            [HttpPost]
+            public async Task<ActionResult<Product>> PostProduct(Product product)
+            {
+                _context.Products.Add(product);
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+            }
+
+            [HttpPut("{id}")]
+            public async Task<IActionResult> PutProduct(int id, Product product)
+            {
+                if (id != product.Id)
+                {
+                    return BadRequest();
+                }
+
+                _context.Entry(product).State = EntityState.Modified;
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!ProductExists(id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+
+                return NoContent();
+            }
+
+            [HttpDelete("{id}")]
+            public async Task<IActionResult> DeleteProduct(int id)
+            {
+                var product = await _context.Products.FindAsync(id);
+                if (product == null)
+                {
+                    return NotFound();
+                }
+
+                _context.Products.Remove(product);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+
+            private bool ProductExists(int id)
+            {
+                return _context.Products.Any(e => e.Id == id);
+            }
+        }
+    }
+
+Step 8: Apply Migrations and Update the Database
+
+    Open the NuGet Package Manager Console.
+
+    Run the following commands to create and apply the migrations:
+
+    powershell
+
+    Add-Migration InitialCreate
+    Update-Database
+
+Step 9: Run the Application
+
+    Press F5 or click the "Run" button in Visual Studio to start the application.
+    Navigate to https://localhost:5001/api/products (or the appropriate URL) to see your API in action.
+
+With these steps, you have created a Web API using ASP.NET Core and the Code First approach with Entity Framework Core. You can now extend the API by adding more models, controllers, and functionality as needed.
