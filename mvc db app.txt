@@ -1,0 +1,51 @@
+1. create new project
+web app MVC 
+
+
+2. tools 
+nuget package for solution
+
+-nuget manager:
+1. Microsoft.EntityFrameworkCore
+2.Microsoft.EntityFrameworkCore.SqlServer
+3.Microsoft.EntityFrameworkCore.Tools
+4.Microsoft.Data.SqlClient
+
+
+3. create database 
+	view
+	sql server objet exploree
+	add db
+add table and data
+update
+add values in table 
+view data
+
+
+4. update-database)
+3. Package Manager Console
+ Scaffold-DbContext "Data Source=(localdb)\MsSqlLocalDb;Initial Catalog=fivedb ;Integrated Security=true" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
+
+
+5. controller 
+right click 
+add controller 
+- MVC
+-3rd option with actions and entity frameworks
+
+
+6. Add EF service in Program.cs
+
+
+ builder.Services.AddDbContext<Yash1Context>(options =>
+                        options.UseSqlServer(builder.Configuration.GetConnectionString("Yash1Context")));
+
+
+7. Specify connection string in appsettings.json
+
+"ConnectionStrings": {
+    "Yash1Context": "Data Source=(localdb)\\MsSqlLocalDb;Initial Catalog=Yash1;Integrated Security=true;MultipleActiveResultSets=true"
+  }
+
+
+http://localhost:5236/Thirdtbls/Index
